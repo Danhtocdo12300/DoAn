@@ -65,7 +65,6 @@ namespace DoAnTinHoc1.Form_ChucNang
 
         private void btn_AddHD_Click(object sender, EventArgs e)
         {
-            PhuTung_Kho phuTung = CXuLyDuLieu.tim_PhuTungNhapKho(cboMaPhuTung.Text.Split('-')[0]);
 
             string maHD = SinhMaHD.GenerateSequentialCode();
             DateTime ngayLHD;
@@ -90,6 +89,13 @@ namespace DoAnTinHoc1.Form_ChucNang
             {
                 MessageBox.Show("Mã hóa đơn " + maHD + " đã tồn tại", "Thông Báo ", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
+            }
+
+            foreach (var pt in DS_PhuTung)
+            {
+                var a = CXuLyDuLieu.tim_PhuTungNhapKho(pt.PhuTung.MAPT);
+                if (a != null)
+                    a.SoLuong -= pt.SoLuong;
             }
 
             HoaDon hoaDon = new HoaDon(maHD, khachHang, ngayLHD, DS_PhuTung);
@@ -125,14 +131,17 @@ namespace DoAnTinHoc1.Form_ChucNang
             }
         }
 
+
         private void btnThem_PT_Click(object sender, EventArgs e)
         {
             PhuTung_Kho phuTung = CXuLyDuLieu.tim_PhuTungNhapKho(cboMaPhuTung.Text.Split('-')[0]);
+
             if (phuTung == null)
             {
                 MessageBox.Show("Không tìm thấy phụ tùng", "Thông Báo ", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
+       
             int soLuongTrc = phuTung.SoLuong;
 
             if (!int.TryParse(txt_Number.Text, out int soLuong))
@@ -140,20 +149,28 @@ namespace DoAnTinHoc1.Form_ChucNang
                 MessageBox.Show("Ô số lượng phải nhập bằng số", "Thông Báo ", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
-            phuTung.SoLuong = soLuong;
-            double giaTien = 0;
-            if (!double.TryParse(txtGiaTien.Text, out giaTien))
+
+            if (soLuong <= 0 || soLuong > soLuongTrc)
+            {
+                MessageBox.Show("Số lượng phải > 0 và <= " + soLuongTrc, "Thông Báo ", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            if (!double.TryParse(txtGiaTien.Text, out double giaTien))
             {
                 MessageBox.Show("Ô giá tiền phải nhập bằng số", "Thông Báo ", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
-            phuTung.PhuTung.GIAPT = giaTien;
-            if (DS_PhuTung.Contains(phuTung))
+
+            PhuTung_Kho tempPT= new PhuTung_Kho(phuTung.PhuTung, soLuong, phuTung.NgayNhap);
+
+            tempPT.PhuTung.GIAPT = giaTien;
+            if (DS_PhuTung.Contains(tempPT))
             {
                 MessageBox.Show("Phụ tùng đã tồn tại trong hóa đơn", "Thông Báo ", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
-            DS_PhuTung.Add(phuTung);
+            DS_PhuTung.Add(tempPT);
             string maHD = SinhMaHD.GenerateSequentialCode();
 
             MessageBox.Show("Thêm phụ tùng thành công. Mã hóa đơn: " + maHD, "Thông Báo ", MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -161,7 +178,6 @@ namespace DoAnTinHoc1.Form_ChucNang
 
 
         }
-
 
         void LoadData()
         {
@@ -181,9 +197,11 @@ namespace DoAnTinHoc1.Form_ChucNang
 
         private void button2_Click(object sender, EventArgs e)
         {
-            this.Hide();    
+            Close();
 
         }
+
+
 
         private void btnXoa_HoaDon_Click(object sender, EventArgs e)
         {

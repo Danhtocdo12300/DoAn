@@ -84,7 +84,6 @@ namespace DoAnTinHoc1
             if (CXuLyDuLieu.tim_KhachHang(maKH) == null)
             {
 
-                //CXuLyDuLieu.them_KhachHang(khach);
                 CXuLyDuLieu.them_KhachHang(khach);
                 MessageBox.Show(" Thêm thành công", "Thông Báo ", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
